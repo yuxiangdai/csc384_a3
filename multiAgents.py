@@ -50,14 +50,12 @@ class ReflexAgent(Agent):
         "Add more of your code here if you want to"
 
         if legalMoves[chosenIndex] == "Stop":
-            otherIndices = [index for index in range(len(scores)) if scores[index] != bestScore]
-            chosenIndex = random.choice(otherIndices)
+            # scores[chosenIndex] == float("-inf")
+            # newBestScore = max(scores)
+            newBestIndices = [index for index in range(len(scores)) if scores[index] != bestScore]
+            chosenIndex = random.choice(newBestIndices)
         return legalMoves[chosenIndex]
 
-#         Pacman emerges victorious! Score: 1236
-# Pacman emerges victorious! Score: 1249
-# Pacman emerges victorious! Score: 1229
-# Pacman emerges victorious! Score: 1257
 
     def evaluationFunction(self, currentGameState, action):
         """
