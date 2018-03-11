@@ -157,56 +157,60 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         
 
-        util.raiseNotDefined()
-
-        numAgents = gameState.getNumAgents()
-        index = [i for i in range(numAgents)]
-        # Collect legal moves and successor states into list
-        legalMoves = map(lambda x: gameState.getLegalActions(x), index)
-        
         ###
         scoreFunc = self.evaluationFunction
         depth = self.depth
-        n = gameState.getNumAgents()
-        pacGameStates = []
-        pacActions = gameState.getLegalActions(0)
-        for action in pacActions:
-            pacGameStates.append([gameState.generateSuccessor(0, action), action])
+
+        score, action = self.DFMiniMax(gameState, 0, 0) 
+        return action
+
+    def DFMiniMax(self, gameState, depth, player):
+        if depth == self.depth:
+            Pacaction = gameState.getPacmanState().configuration.direction
+            if gameState.isLose():
+                return float("-inf"), Pacaction
+            elif gameState.isWin():
+                return float("inf"), Pacaction
+            else:
+                return self.evaluationFunction(gameState), Pacaction
+
+        successors = []
+        for action in gameState.getLegalActions(player):
+            successors.append(gameState.generateSuccessor(player, action))
+        
+        if player == 0:
+            if player == gameState.getNumAgents() - 1:
+                player = 0
+                depth += 1
+            else:
+                player += 1
+
+            curScore = float("-inf")
+            curAction = "East"
+            for successor in successors:
+                score, action = self.DFMiniMax(successor, depth, player)
+                if score >= curScore:
+                    curScore = score
+                    curAction = action
+            return curScore, curAction
+        else:
+            if player == gameState.getNumAgents() - 1:
+                player = 0
+                depth += 1
+            else:
+                player += 1
+
+            curScore = float("inf")
+            curAction = "East"
+            for successor in successors:
+                score, action = self.DFMiniMax(successor, depth, player)
+                if score <= curScore:
+                    curScore = score
+                    curAction = action
+
+            return curScore, curAction
 
 
-
-
-        ## a max layer for Pacman, and a min layer for each ghost
-
-        # build successor node trees for each agent
-        for agentIndex, Moves in enumerate(legalMoves):  
-            Scores = []
-
-            if self.isWin() or self.isLose():
-                pass
-                ## or self.depth has been fully explroed 
-                #  return the minimax action or None ?
-
-
-
-
-            for action in Moves:
-                nextGameState = gameState.generateSuccessor(agentIndex, action) 
-                score = self.evaluationFunction(nextGameState)
-                Scores.append(score)
-                if agentIndex != 0:
-                    pass
-                    # return minimum of DFMiniMax(c, MAX) over c 
-                else:
-                    pass
-                    # return max of DFMiniMax(c, MIN) over nextGameState list
-        # return maximum of DFMiniMax(c, MIN) over c
-
-
-
-    
-
-## recurse + check for end state ?
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
