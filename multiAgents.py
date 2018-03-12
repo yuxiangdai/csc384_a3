@@ -166,13 +166,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def DFMiniMax(self, gameState, depth, player):
         if depth == self.depth:
-            Pacaction = gameState.getPacmanState().configuration.direction
             if gameState.isLose():
-                return float("-inf"), Pacaction
+                return float("-inf"), Directions.STOP
             elif gameState.isWin():
-                return float("inf"), Pacaction
+                return float("inf"), Directions.STOP
             else:
-                return self.evaluationFunction(gameState), Pacaction
+                return self.evaluationFunction(gameState), Directions.STOP
 
         successors = []
         for action in gameState.getLegalActions(player):
