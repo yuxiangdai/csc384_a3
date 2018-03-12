@@ -144,11 +144,11 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
             Here are some method calls that might be useful when implementing minimax.
 
-            gameState.getLegalActions(agentIndex):
+            gameState.getLegalActions(player):
             Returns a list of legal actions for an agent
-            agentIndex=0 means Pacman, ghosts are >= 1
+            player=0 means Pacman, ghosts are >= 1
 
-            gameState.generateSuccessor(agentIndex, action):
+            gameState.generateSuccessor(player, action):
             Returns the successor game state after an agent takes an action
 
             gameState.getNumAgents():
@@ -157,59 +157,51 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         
 
-        ###
-        scoreFunc = self.evaluationFunction
-        depth = self.depth
-
-        score, action = self.DFMiniMax(gameState, 0, 0) 
+        
+        action, score = self.DFMiniMax(gameState, 0, 0) 
         return action
 
-    def DFMiniMax(self, gameState, depth, player):
-        if depth == self.depth:
-            if gameState.isLose():
-                return float("-inf"), Directions.STOP
-            elif gameState.isWin():
-                return float("inf"), Directions.STOP
-            else:
-                return self.evaluationFunction(gameState), Directions.STOP
+    def DFMiniMax(self, curGameState, player, curDepth):
+        if curDepth == self.depth or curGameState.isWin() or curGameState.isLose():
+            return "STOP", self.evaluationFunction(curGameState)
+
+        actions = curGameState.getLegalActions(player)
 
         successors = []
-        for action in gameState.getLegalActions(player):
-            successors.append(gameState.generateSuccessor(player, action))
+        for action in actions:
+            successors.append([curGameState.generateSuccessor(player, action), action])
         
         if player == 0:
-            if player == gameState.getNumAgents() - 1:
-                player = 0
-                depth += 1
-            else:
-                player += 1
-
             curScore = float("-inf")
-            curAction = "East"
-            for successor in successors:
-                score, action = self.DFMiniMax(successor, depth, player)
-                if score >= curScore:
-                    curScore = score
+            for succ, action in successors:
+                if player == curGameState.getNumAgents() - 1:
+                    newPlayer = 0
+                    newDepth = curDepth + 1
+                else:
+                    newPlayer = player + 1
+                    newDepth = curDepth
+
+                pacAction, score = self.DFMiniMax(succ, newPlayer, newDepth)
+                if score > curScore:
                     curAction = action
-            return curScore, curAction
+                    curScore = score
+
         else:
-            if player == gameState.getNumAgents() - 1:
-                player = 0
-                depth += 1
-            else:
-                player += 1
-
             curScore = float("inf")
-            curAction = "East"
-            for successor in successors:
-                score, action = self.DFMiniMax(successor, depth, player)
-                if score <= curScore:
-                    curScore = score
+            for succ, action in successors:
+                if player == curGameState.getNumAgents() - 1:
+                    newPlayer = 0
+                    newDepth = curDepth + 1
+                else:
+                    newPlayer = player + 1
+                    newDepth = curDepth
+
+                ghostAction, score = self.DFMiniMax(succ, newPlayer, newDepth)
+                if score < curScore:
                     curAction = action
+                    curScore = score
 
-            return curScore, curAction
-
-
+        return curAction, curScore
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
