@@ -285,6 +285,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         action, score = self.DFMiniMax(gameState, 0, 0) 
+        print(action, score)
         return action
 
 
@@ -349,16 +350,16 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
     # Useful information you can extract from a GameState (pacman.py)
-    successorGameState = currentGameState.generatePacmanSuccessor(action)
-    newPos = successorGameState.getPacmanPosition()
-    newFood = successorGameState.getFood().asList()
-    newGhostStates = successorGameState.getGhostStates()
+    # successorGameState = currentGameState.generatePacmanSuccessor(action)
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood().asList()
+    newGhostStates = currentGameState.getGhostStates()
     newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
     "*** YOUR CODE HERE ***"
-    distanceToScaredGhosts = [10000]
+    distanceToScaredGhosts = [-10000]
     distanceToGhosts = [float("inf")]
-    distanceToFood = []
+    distanceToFood = [-10000]
     for ghost in newGhostStates:
         ghostPos = ghost.getPosition()
         if ghost.scaredTimer:
@@ -367,14 +368,26 @@ def betterEvaluationFunction(currentGameState):
             distanceToGhosts.append(manhattanDistance(ghostPos, newPos))
     if min(distanceToGhosts) == 0:
         distanceToGhosts = [float("inf")]
-
+    if min(distanceToScaredGhosts) == 0:
+        distanceToScaredGhosts = [-10000]
+    if min(distanceToFood) == 0:
+        distanceToFood = [-10000]
     if(newFood != []):
         distanceToFood = map(lambda x: manhattanDistance(x, newPos), newFood)
     else:
-        distanceToFood = [0]
+        distanceToFood = [-10000]
         
+    score1 = currentGameState.getScore()
+    score2 = -4 * 1.0 / min(distanceToGhosts)
+    score3 = 5.0 / min(distanceToFood)
+    score4 = 2.0 / min(distanceToScaredGhosts)
     
-    return successorGameState.getScore() - 4 * 1.0 / min(distanceToGhosts)  - min(distanceToFood) - min(distanceToScaredGhosts)
+    # score3 = - 200.0 * min(distanceToFood)
+    # score4 = - 2.0* min(distanceToScaredGhosts)
+
+    total = score1 + score2 + score3 + score4
+    # print(total)
+    return score1 + score2 + score3 + score4
     # return successorGameState.getScore() - 2 * min(distanceToFood) - min(distanceToScaredGhosts)
 
 # Abbreviation
