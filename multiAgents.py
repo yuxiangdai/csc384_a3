@@ -156,8 +156,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         
-
-        
         action, score = self.DFMiniMax(gameState, 0, 0) 
         return action
 
@@ -167,13 +165,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         actions = curGameState.getLegalActions(player)
 
-        successors = []
+        succs = []
         for action in actions:
-            successors.append([curGameState.generateSuccessor(player, action), action])
+            succs.append([curGameState.generateSuccessor(player, action), action])
         
         if player == 0:
             curScore = float("-inf")
-            for succ, action in successors:
+            for succ, action in succs:
                 if player == curGameState.getNumAgents() - 1:
                     newPlayer = 0
                     newDepth = curDepth + 1
@@ -188,7 +186,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         else:
             curScore = float("inf")
-            for succ, action in successors:
+            for succ, action in succs:
                 if player == curGameState.getNumAgents() - 1:
                     newPlayer = 0
                     newDepth = curDepth + 1
@@ -213,7 +211,65 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        alphabeta, action, score  = self.AlphaBeta(gameState, 0, 0, float("-inf"), float("inf")) 
+        return action
+
+
+    def AlphaBeta(self, curGameState, player, curDepth, curAlpha, curBeta):
+        if curDepth == self.depth or curGameState.isWin() or curGameState.isLose():
+            return self.evaluationFunction(curGameState), "STOP", self.evaluationFunction(curGameState)
+
+        actions = curGameState.getLegalActions(player)
+
+        # for some reason this code breaks the entire thing
+        # successors = []
+        # for action in actions:
+        #     successors.append([curGameState.generateSuccessor(player, action), action])
+        
+        if player == 0:
+            curScore = float("-inf")
+            for action in actions:
+                succ = curGameState.generateSuccessor(player, action)
+                if player == curGameState.getNumAgents() - 1:
+                    newPlayer = 0
+                    newDepth = curDepth + 1
+                else:
+                    newPlayer = player + 1
+                    newDepth = curDepth
+
+                alpha, pacAction, score = self.AlphaBeta(succ, newPlayer, newDepth, curAlpha, curBeta)
+
+                if score > curScore:
+                    curAction = action
+                    curScore = score
+                if alpha >= curAlpha:
+                    curAlpha = alpha
+                if curBeta <= curAlpha:
+                    break
+            return curAlpha, curAction, curScore
+
+        else:
+            curScore = float("inf")
+            for action in actions:
+                succ = curGameState.generateSuccessor(player, action)
+                if player == curGameState.getNumAgents() - 1:
+                    newPlayer = 0
+                    newDepth = curDepth + 1
+                else:
+                    newPlayer = player + 1
+                    newDepth = curDepth
+
+                beta, ghostAction, score,  = self.AlphaBeta(succ, newPlayer, newDepth, curAlpha, curBeta)
+
+                if score < curScore:
+                    curAction = action
+                    curScore = score
+                if beta <= curBeta:
+                    curBeta = beta
+                if curBeta <= curAlpha:
+                    break
+                    
+            return curBeta, curAction, curScore
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -228,7 +284,61 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        action, score = self.DFMiniMax(gameState, 0, 0) 
+        return action
+
+
+    def DFMiniMax(self, curGameState, player, curDepth):
+        if curDepth == self.depth or curGameState.isWin() or curGameState.isLose():
+            return "STOP", self.evaluationFunction(curGameState)
+
+        actions = curGameState.getLegalActions(player)
+
+        succs = []
+        for action in actions:
+            succs.append([curGameState.generateSuccessor(player, action), action])
+        
+        if player == 0:
+            curScore = float("-inf")
+            for succ, action in succs:
+                if player == curGameState.getNumAgents() - 1:
+                    newPlayer = 0
+                    newDepth = curDepth + 1
+                else:
+                    newPlayer = player + 1
+                    newDepth = curDepth
+
+                pacAction, score = self.DFMiniMax(succ, newPlayer, newDepth)
+                if score > curScore:
+                    curAction = action
+                    curScore = score
+
+        # The only difference in implementation of Expectimax
+        # search and Minimax search, is that at a min node, Expectimax search will return the average value over its
+        # children as opposed to the minimum value.
+        else:
+            curScore = float("inf")
+            totalScore = 0
+            totalActions = 0
+            for succ, action in succs:
+                totalActions += 1
+                if player == curGameState.getNumAgents() - 1:
+                    newPlayer = 0
+                    newDepth = curDepth + 1
+                else:
+                    newPlayer = player + 1
+                    newDepth = curDepth
+
+                ghostAction, score = self.DFMiniMax(succ, newPlayer, newDepth)
+                totalScore += score
+            curScore = totalScore * 1.0 / totalActions
+
+        try:
+            curAction
+        except (UnboundLocalError, NameError) as e:
+            return "STOP", curScore 
+        return curAction, curScore 
+            
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -238,7 +348,34 @@ def betterEvaluationFunction(currentGameState):
         DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Useful information you can extract from a GameState (pacman.py)
+    successorGameState = currentGameState.generatePacmanSuccessor(action)
+    newPos = successorGameState.getPacmanPosition()
+    newFood = successorGameState.getFood().asList()
+    newGhostStates = successorGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+
+    "*** YOUR CODE HERE ***"
+    distanceToScaredGhosts = [10000]
+    distanceToGhosts = [float("inf")]
+    distanceToFood = []
+    for ghost in newGhostStates:
+        ghostPos = ghost.getPosition()
+        if ghost.scaredTimer:
+            distanceToScaredGhosts.append(manhattanDistance(ghostPos, newPos))
+        else:
+            distanceToGhosts.append(manhattanDistance(ghostPos, newPos))
+    if min(distanceToGhosts) == 0:
+        distanceToGhosts = [float("inf")]
+
+    if(newFood != []):
+        distanceToFood = map(lambda x: manhattanDistance(x, newPos), newFood)
+    else:
+        distanceToFood = [0]
+        
+    
+    return successorGameState.getScore() - 4 * 1.0 / min(distanceToGhosts)  - min(distanceToFood) - min(distanceToScaredGhosts)
+    # return successorGameState.getScore() - 2 * min(distanceToFood) - min(distanceToScaredGhosts)
 
 # Abbreviation
 better = betterEvaluationFunction
