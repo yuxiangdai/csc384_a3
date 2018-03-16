@@ -284,12 +284,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             legal moves.
         """
         "*** YOUR CODE HERE ***"
-        action, score = self.DFMiniMax(gameState, 0, 0) 
-        print(action, score)
+        action, score = self.ExpectimaxAction(gameState, 0, 0) 
+        # print(action, score)
         return action
 
 
-    def DFMiniMax(self, curGameState, player, curDepth):
+    def ExpectimaxAction(self, curGameState, player, curDepth):
         if curDepth == self.depth or curGameState.isWin() or curGameState.isLose():
             return "STOP", self.evaluationFunction(curGameState)
 
@@ -309,7 +309,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     newPlayer = player + 1
                     newDepth = curDepth
 
-                pacAction, score = self.DFMiniMax(succ, newPlayer, newDepth)
+                pacAction, score = self.ExpectimaxAction(succ, newPlayer, newDepth)
                 if score > curScore:
                     curAction = action
                     curScore = score
@@ -330,9 +330,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     newPlayer = player + 1
                     newDepth = curDepth
 
-                ghostAction, score = self.DFMiniMax(succ, newPlayer, newDepth)
+                ghostAction, score = self.ExpectimaxAction(succ, newPlayer, newDepth)
                 totalScore += score
-            curScore = totalScore * 1.0 / totalActions
+            curScore = float(totalScore) / float(totalActions)
 
         try:
             curAction
@@ -356,9 +356,16 @@ def betterEvaluationFunction(currentGameState):
     newGhostStates = currentGameState.getGhostStates()
     newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
+    capsules = currentGameState.getCapsules()
+
+    if(capsules != []):
+        distanceToCapsule = list(map(lambda x: manhattanDistance(x, newPos), capsules))
+    else:
+        distanceToCapsule = [-10000]
+
     "*** YOUR CODE HERE ***"
     distanceToScaredGhosts = [-10000]
-    distanceToGhosts = [float("inf")]
+    distanceToGhosts = [10000]
     distanceToFood = [-10000]
     for ghost in newGhostStates:
         ghostPos = ghost.getPosition()
@@ -367,21 +374,21 @@ def betterEvaluationFunction(currentGameState):
         else:
             distanceToGhosts.append(manhattanDistance(ghostPos, newPos))
     if min(distanceToGhosts) == 0:
-        distanceToGhosts = [float("inf")]
+        distanceToGhosts = [10000]
     if min(distanceToScaredGhosts) == 0:
         distanceToScaredGhosts = [-10000]
     if min(distanceToFood) == 0:
         distanceToFood = [-10000]
     if(newFood != []):
-        distanceToFood = map(lambda x: manhattanDistance(x, newPos), newFood)
+        distanceToFood = list(map(lambda x: manhattanDistance(x, newPos), newFood))
     else:
         distanceToFood = [-10000]
         
     score1 = currentGameState.getScore()
-    score2 = -4 * 1.0 / min(distanceToGhosts)
+    score2 = -4.0 / min(distanceToGhosts)
     score3 = 5.0 / min(distanceToFood)
-    score4 = 2.0 / min(distanceToScaredGhosts)
-    
+    score4 = 10.0 / min(distanceToScaredGhosts)
+    score3 = 10.0 / min(distanceToCapsule)
     # score3 = - 200.0 * min(distanceToFood)
     # score4 = - 2.0* min(distanceToScaredGhosts)
 
